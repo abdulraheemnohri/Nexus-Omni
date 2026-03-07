@@ -1,45 +1,63 @@
-import time
-import threading
+#!/usr/bin/env python3
+"""
+Nexus Omni v5.0 - Main Entry Point
+Offline Sovereign Mobile Brain
+"""
+
 import os
+import sys
 import json
+import time
+import signal
+import logging
+import threading
+from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
-from modules.utils import setup_logging, load_config, get_logger, get_battery_level, generate_ssl_cert
-from modules.memory import MemoryManager
-from modules.agent import AgentPlanner
-from modules.voice import VoiceInterface
-from modules.control import ControlBridge
-from modules.vision import VisionEngine
-from modules.network import NetworkManager
-from modules.dashboard import run_dashboard, socketio
-from modules.graph import GraphManager
+
+# Add modules to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'modules'))
+
+# Import core modules
+from dashboard import run_dashboard, SocketIOHandler
+from voice import VoiceInterface
+from memory import BrainMemory
+from control import ADBController
+from agent import AgentPlanner
+from sensors import SensorFusion
+from vault import SecureVault
+from autopilot import AutoPilot
+from utils import load_config, generate_ssl_cert
 
 class NexusOmni:
     def __init__(self, profile=None):
         self.config = self._load_profile(profile)
-        setup_logging()
-        self.logger = get_logger("Nexus")
+        self.setup_logging()
+        self.running = False
 
         # Initialize SSL if needed
         if self.config['dashboard']['ssl_enabled']:
             generate_ssl_cert()
 
+        print("=" * 50)
+        print("NEXUS OMNI v5.0 'HORIZON'")
+        print("=" * 50)
+        print(f"Initializing {self.config['identity']['name']}...")
+
         # State
         self.incognito_mode = False
 
-        # Initialize Modules
-        self.memory = MemoryManager(self.config)
-        self.agent = AgentPlanner(self.config)
+        # Initialize core components
+        self.memory = BrainMemory(self.config)
+        self.vault = SecureVault(self.config)
+        self.controller = ADBController(self.config['network']['adb_ip'])
+        self.sensors = SensorFusion()
         self.voice = VoiceInterface(self.config)
-        self.control = ControlBridge(self.config)
-        self.vision = VisionEngine(self.config)
-        self.network = NetworkManager(self.config)
-        self.graph = GraphManager(self.memory)
+        self.agent = AgentPlanner(self.config, self.controller, self.memory)
+        self.autopilot = AutoPilot(self.config, self.controller)
         self.plugins = self._load_plugins()
-        self.scheduler = BackgroundScheduler()
-        self.scheduler.start()
 
-        self.running = True
-        self.logger.info(f"Nexus Omni v{self.config['identity']['version']} 'Horizon' started.")
+        print("✓ All modules initialized")
+        print("=" * 50)
 
     def _load_profile(self, profile):
         base_config = load_config()
@@ -52,15 +70,24 @@ class NexusOmni:
                 return json.load(f)
         return base_config
 
-    def switch_profile(self, profile_name):
-        self.logger.info(f"Switching to profile: {profile_name}")
-        # In a real app, this might restart the orchestrator or re-init modules
-        self.config = self._load_profile(profile_name)
-        # Update modules with new config if necessary
+    def setup_logging(self):
+        log_file = self.config['logging']['file']
+        log_dir = os.path.dirname(log_file)
+        if log_dir and not os.path.exists(log_dir):
+            os.makedirs(log_dir, exist_ok=True)
 
-    def toggle_incognito(self, state):
-        self.incognito_mode = state
-        self.logger.info(f"Incognito Mode: {'Enabled' if state else 'Disabled'}")
+        handlers = [
+            logging.FileHandler(log_file),
+            logging.StreamHandler(),
+            SocketIOHandler()
+        ]
+
+        logging.basicConfig(
+            level=getattr(logging, self.config['logging']['level']),
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=handlers
+        )
+        self.logger = logging.getLogger('NexusOmni')
 
     def _load_plugins(self):
         plugins = []
@@ -73,53 +100,61 @@ class NexusOmni:
                 plugins.append(file)
         return plugins
 
-    def energy_management(self):
-        while self.running:
-            battery = get_battery_level()
-            if battery < self.config['energy']['llm_mode_low']:
-                self.logger.warning("Low Battery! Switching to Keyword Only mode.")
-            elif battery < self.config['energy']['llm_mode_medium']:
-                self.logger.info("Battery Medium. Using Quantized LLM.")
-
-            time.sleep(60)
-
-    def trigger_kill_switch(self):
-        self.logger.critical("EMERGENCY KILL SWITCH TRIGGERED!")
+    def signal_handler(self, sig, frame):
+        print("\n⚠ Shutdown signal received")
         self.running = False
-        # In a real environment, we'd kill all subprocesses and lock Android
-        self.control.run_adb(["shell", "input", "keyevent", "26"]) # Power button
-        self.logger.info("System Locked. AI processes terminated.")
+        self.cleanup()
+        sys.exit(0)
 
-    def self_heal_watchdog(self):
+    def cleanup(self):
+        print("Cleaning up resources...")
+        self.memory.close()
+        self.vault.close()
+        print("✓ Cleanup complete")
+
+    def health_check(self):
+        battery = self.sensors.get_battery()
+        if battery.get('percentage', 100) < self.config['energy']['llm_mode_low']:
+            self.logger.warning("Low battery - switching to power save mode")
+        return True
+
+    def run(self):
+        signal.signal(signal.SIGINT, self.signal_handler)
+        signal.signal(signal.SIGTERM, self.signal_handler)
+
+        # Start dashboard
+        dashboard_thread = threading.Thread(target=run_dashboard, args=(self.config,), daemon=True)
+        dashboard_thread.start()
+        print(f"✓ Dashboard started at https://{self.config['dashboard']['host']}:{self.config['dashboard']['port']}")
+
+        # Start autopilot
+        self.autopilot.start()
+        print("✓ AutoPilot scheduler started")
+
+        self.running = True
+        self.logger.info("Nexus Omni is now ONLINE")
+        self.voice.speak(f"{self.config['identity']['name']} Omni online. How can I help?")
+
         while self.running:
-            # Check for module health (stub)
-            # If RAM > 90%, clear cache
-            time.sleep(30)
+            try:
+                self.health_check()
+                command = self.voice.listen()
+                if command:
+                    self.logger.info(f"Voice command: {command}")
+                    self.agent.process(command)
+                time.sleep(0.5)
+            except KeyboardInterrupt:
+                break
+            except Exception as e:
+                self.logger.error(f"Main loop error: {e}")
+                time.sleep(5)
 
-    def dashboard_heartbeat(self):
-        while self.running:
-            socketio.emit('status', {'cpu': 10, 'ram': 20, 'battery': get_battery_level()})
-            time.sleep(5)
-
-    def start(self):
-        # Start background threads
-        threading.Thread(target=self.energy_management, daemon=True).start()
-        threading.Thread(target=self.self_heal_watchdog, daemon=True).start()
-        threading.Thread(target=self.dashboard_heartbeat, daemon=True).start()
-
-        # Start Dashboard in a separate thread
-        threading.Thread(target=run_dashboard, daemon=True).start()
-
-        # Main Loop
-        try:
-            while self.running:
-                # Core agent logic would go here
-                # e.g., listening for wake word or processing scheduled tasks
-                time.sleep(1)
-        except KeyboardInterrupt:
-            self.running = False
-            self.logger.info("Nexus Omni shutting down.")
+        self.cleanup()
 
 if __name__ == "__main__":
-    nexus = NexusOmni()
-    nexus.start()
+    try:
+        nexus = NexusOmni()
+        nexus.run()
+    except Exception as e:
+        print(f"Fatal error: {e}")
+        sys.exit(1)

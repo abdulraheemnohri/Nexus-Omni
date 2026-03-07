@@ -1,97 +1,97 @@
-import sqlite3
+#!/usr/bin/env python3
+"""
+Memory Module - SQLite + Vector Embeddings
+"""
+
 import os
-from cryptography.fernet import Fernet
-from modules.utils import get_logger
+import sqlite3
+import datetime
+import json
+try:
+    import sqlite_vec
+except ImportError:
+    sqlite_vec = None
 
-logger = get_logger("Memory")
-
-class MemoryManager:
+class BrainMemory:
     def __init__(self, config):
         self.config = config
-        self.db_path = "data/brain_memory.db"
-        self.vault_path = "data/vault.db"
-        self.key_path = "data/vault.key"
-        self._init_dirs()
-        self._init_db()
-        self._init_vault()
+        self.db_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'brain_memory.db')
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
 
-    def _init_dirs(self):
-        if not os.path.exists("data"):
-            os.makedirs("data")
+        self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        if sqlite_vec:
+            self.conn.enable_load_extension(True)
+            sqlite_vec.load(self.conn)
+        self.cursor = self.conn.cursor()
+        self.setup_tables()
 
-    def _init_db(self):
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        # Semantic memory table
-        cursor.execute('''CREATE TABLE IF NOT EXISTS long_term (id INTEGER PRIMARY KEY, content TEXT, embedding BLOB)''')
-        # Short term logs
-        cursor.execute('''CREATE TABLE IF NOT EXISTS short_term (id INTEGER PRIMARY KEY, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, tag TEXT, content TEXT)''')
+    def setup_tables(self):
+        # Standard memory table
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS memory (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                category TEXT,
+                content TEXT,
+                importance INTEGER DEFAULT 1
+            )
+        ''')
+
         # Knowledge Graph edges
-        cursor.execute('''CREATE TABLE IF NOT EXISTS graph_edges (source TEXT, target TEXT, relation TEXT)''')
-        conn.commit()
-        conn.close()
-        logger.info("Memory databases initialized.")
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS graph_edges (
+                source TEXT,
+                target TEXT,
+                relation TEXT
+            )
+        ''')
 
-    def _init_vault(self):
-        if not os.path.exists(self.key_path):
-            key = Fernet.generate_key()
-            with open(self.key_path, "wb") as key_file:
-                key_file.write(key)
+        # Vector memory table for semantic search (if sqlite-vec available)
+        if sqlite_vec:
+            self.cursor.execute('''
+                CREATE VIRTUAL TABLE IF NOT EXISTS semantic_memory USING vec0(
+                    embedding float[384],
+                    content TEXT,
+                    timestamp TEXT,
+                    category TEXT
+                )
+            ''')
 
-        with open(self.key_path, "rb") as key_file:
-            self.fernet = Fernet(key_file.read())
+        self.conn.commit()
 
-        conn = sqlite3.connect(self.vault_path)
-        cursor = conn.cursor()
-        cursor.execute('''CREATE TABLE IF NOT EXISTS secrets (key TEXT PRIMARY KEY, encrypted_value BLOB)''')
-        conn.commit()
-        conn.close()
-        logger.info("Encrypted vault initialized.")
-
-    def store_short_term(self, tag, content):
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO short_term (tag, content) VALUES (?, ?)", (tag, content))
-        conn.commit()
-        conn.close()
-
-    def add_semantic_memory(self, content):
-        logger.info(f"Adding semantic memory: {content[:50]}...")
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO long_term (content) VALUES (?)", (content,))
-        conn.commit()
-        conn.close()
-
-    def store_secret(self, key, value):
-        encrypted_value = self.fernet.encrypt(value.encode())
-        conn = sqlite3.connect(self.vault_path)
-        cursor = conn.cursor()
-        cursor.execute("INSERT OR REPLACE INTO secrets (key, encrypted_value) VALUES (?, ?)", (key, encrypted_value))
-        conn.commit()
-        conn.close()
-
-    def get_secret(self, key):
-        conn = sqlite3.connect(self.vault_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT encrypted_value FROM secrets WHERE key=?", (key,))
-        row = cursor.fetchone()
-        conn.close()
-        if row:
-            return self.fernet.decrypt(row[0]).decode()
-        return None
+    def save(self, content, category="general", importance=1):
+        timestamp = datetime.datetime.now().isoformat()
+        self.cursor.execute(
+            "INSERT INTO memory (timestamp, category, content, importance) VALUES (?, ?, ?, ?)",
+            (timestamp, category, content, importance)
+        )
+        self.conn.commit()
+        return self.cursor.lastrowid
 
     def add_graph_edge(self, source, target, relation):
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO graph_edges (source, target, relation) VALUES (?, ?, ?)", (source, target, relation))
-        conn.commit()
-        conn.close()
+        self.cursor.execute(
+            "INSERT INTO graph_edges (source, target, relation) VALUES (?, ?, ?)",
+            (source, target, relation)
+        )
+        self.conn.commit()
 
     def get_graph_data(self):
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT source, target, relation FROM graph_edges")
-        edges = cursor.fetchall()
-        conn.close()
-        return edges
+        self.cursor.execute("SELECT source, target, relation FROM graph_edges")
+        return self.cursor.fetchall()
+
+    def search(self, query, limit=5):
+        self.cursor.execute(
+            "SELECT content, timestamp FROM memory WHERE content LIKE ? ORDER BY timestamp DESC LIMIT ?",
+            (f"%{query}%", limit)
+        )
+        return self.cursor.fetchall()
+
+    def get_recent(self, limit=10):
+        self.cursor.execute(
+            "SELECT content, timestamp, category FROM memory ORDER BY timestamp DESC LIMIT ?",
+            (limit,)
+        )
+        return self.cursor.fetchall()
+
+    def close(self):
+        self.conn.close()

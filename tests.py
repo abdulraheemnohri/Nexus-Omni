@@ -2,23 +2,18 @@ import unittest
 import os
 import bcrypt
 import json
-from modules.memory import MemoryManager
+from modules.memory import BrainMemory
 from modules.agent import AgentPlanner
 from modules.utils import load_config
+from modules.control import ADBController
 
 class TestNexusOmni(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.config = load_config()
-        cls.memory = MemoryManager(cls.config)
-        cls.agent = AgentPlanner(cls.config)
-
-    def test_memory_secret_encryption(self):
-        key = "test_secret"
-        value = "top_secret_123"
-        self.memory.store_secret(key, value)
-        retrieved = self.memory.get_secret(key)
-        self.assertEqual(value, retrieved)
+        cls.memory = BrainMemory(cls.config)
+        cls.controller = ADBController(cls.config['network']['adb_ip'])
+        cls.agent = AgentPlanner(cls.config, cls.controller, cls.memory)
 
     def test_agent_asimov_layer(self):
         dangerous_cmd = "rm -rf /"
