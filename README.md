@@ -140,10 +140,21 @@ termux-setup-storage
 
 ---
 
-## 4. PACKAGE & LIBRARY INSTALLATION
+## 4. PROJECT SETUP (GITHUB CLONE)
 
-### Step 4.1: Install Python Dependencies
+### Step 4.1: Clone & Install Dependencies
+Clone this repository directly into Termux and install the Python libraries:
 ```bash
+# 1. Navigate to home directory
+cd ~
+
+# 2. Clone the repository
+git clone https://github.com/[YOUR_USERNAME]/nexus_omni.git
+
+# 3. Navigate to project directory
+cd nexus_omni
+
+# 4. Install all dependencies
 pip install -r requirements.txt
 ```
 
