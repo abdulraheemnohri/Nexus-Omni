@@ -1,0 +1,15 @@
+vosk
+llama-cpp-python
+flask
+flask-socketio
+apscheduler
+cryptography
+pandas
+numpy
+paho-mqtt
+pillow
+pytesseract
+networkx
+pyvis
+pyjwt
+bcrypt

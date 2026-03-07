@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Omni - Dashboard</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex" x-data="{ page: 'home' }">
+    <!-- Sidebar -->
+    <div class="w-64 bg-gray-800 p-6 flex flex-col">
+        <h2 class="text-2xl font-bold mb-8 text-blue-500">Nexus Brain</h2>
+        <nav class="flex-1">
+            <a href="#" @click="page = 'home'" class="block py-2.5 px-4 rounded transition duration-200" :class="page === 'home' ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'">Home</a>
+            <a href="#" @click="page = 'console'" class="block py-2.5 px-4 rounded transition duration-200" :class="page === 'console' ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'">Console</a>
+            <a href="#" @click="page = 'memory'" class="block py-2.5 px-4 rounded transition duration-200" :class="page === 'memory' ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'">Memory</a>
+            <a href="#" @click="page = 'vision'" class="block py-2.5 px-4 rounded transition duration-200" :class="page === 'vision' ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'">Vision</a>
+            <a href="#" @click="page = 'automation'" class="block py-2.5 px-4 rounded transition duration-200" :class="page === 'automation' ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'">Automation</a>
+            <a href="#" @click="page = 'settings'" class="block py-2.5 px-4 rounded transition duration-200" :class="page === 'settings' ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'">Settings</a>
+            <a href="/graph" target="_blank" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Knowledge Graph</a>
+        </nav>
+        <a href="/logout" class="mt-auto py-2.5 px-4 rounded bg-red-600 hover:bg-red-700 text-center">Logout</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-10">
+        <div x-show="page === 'home'">
+            <h1 class="text-4xl font-bold mb-6">System Status</h1>
+            <div class="grid grid-cols-3 gap-6">
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-gray-400 uppercase text-sm">Battery</h3>
+                    <p class="text-3xl font-bold">85%</p>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-gray-400 uppercase text-sm">CPU Load</h3>
+                    <p class="text-3xl font-bold">12%</p>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-gray-400 uppercase text-sm">Status</h3>
+                    <p class="text-3xl font-bold text-green-500">Online</p>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="page === 'console'" class="h-full flex flex-col">
+            <h1 class="text-4xl font-bold mb-6">Live Console</h1>
+            <div id="logs" class="flex-1 bg-black p-4 rounded-lg font-mono text-sm overflow-y-auto mb-4 border border-gray-700">
+                <!-- Logs will appear here -->
+            </div>
+            <div class="flex gap-4">
+                <input type="text" placeholder="Enter ADB command..." class="flex-1 p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500">
+                <button class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded font-bold">Execute</button>
+            </div>
+        </div>
+
+        <div x-show="page === 'memory'">
+            <h1 class="text-4xl font-bold mb-6">Memory Explorer</h1>
+            <div class="bg-gray-800 p-6 rounded-lg mb-6">
+                <input type="text" placeholder="Search memories..." class="w-full p-2 rounded bg-gray-700 border border-gray-600 mb-4">
+                <div class="space-y-2">
+                    <p class="text-gray-400">Recent facts found in semantic memory...</p>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="page === 'vision'">
+            <h1 class="text-4xl font-bold mb-6">Vision Gallery</h1>
+            <div class="grid grid-cols-4 gap-4">
+                <div class="bg-gray-800 h-32 rounded flex items-center justify-center text-gray-500 italic">No recent captures</div>
+            </div>
+        </div>
+
+        <div x-show="page === 'automation'">
+            <h1 class="text-4xl font-bold mb-6">Automation Rules</h1>
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <button class="bg-green-600 px-4 py-2 rounded font-bold mb-4">+ Create Workflow</button>
+                <p class="text-gray-400">No active scheduled tasks.</p>
+            </div>
+        </div>
+
+        <div x-show="page === 'settings'">
+            <h1 class="text-4xl font-bold mb-6">System Settings</h1>
+            <div class="bg-gray-800 p-6 rounded-lg space-y-4">
+                <div>
+                    <label class="block mb-1">Active Profile</label>
+                    <select class="w-full p-2 rounded bg-gray-700 border border-gray-600">
+                        <option>personal</option>
+                        <option>work</option>
+                        <option>incognito</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span>Incognito Mode</span>
+                    <button class="bg-gray-600 w-12 h-6 rounded-full relative">
+                        <div class="bg-white w-4 h-4 rounded-full absolute left-1 top-1"></div>
+                    </button>
+                </div>
+                <button class="w-full bg-red-600 py-2 rounded font-bold" @click="confirm('Trigger Emergency Kill Switch?')">EMERGENCY KILL SWITCH</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const logsDiv = document.getElementById('logs');
+
+        socket.on('log_stream', function(msg) {
+            const p = document.createElement('p');
+            p.textContent = msg.data;
+            if (msg.data.includes('[ERROR]')) p.className = 'text-red-500';
+            if (msg.data.includes('[WARNING]')) p.className = 'text-yellow-500';
+            logsDiv.appendChild(p);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        });
+
+        socket.on('status', function(msg) {
+            console.log(msg.data);
+        });
+    </script>
+</body>
+</html>
