@@ -149,10 +149,10 @@ Clone this repository directly into Termux and install the Python libraries:
 cd ~
 
 # 2. Clone the repository
-git clone https://github.com/[YOUR_USERNAME]/nexus_omni.git
+git clone https://github.com/abdulraheemnohri/Nexus-Omni.git
 
 # 3. Navigate to project directory
-cd nexus_omni
+cd Nexus-Omni
 
 # 4. Install all dependencies
 pip install -r requirements.txt
