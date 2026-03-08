@@ -51,4 +51,14 @@ Nexus Omni uses a modular architecture:
 
 ---
 
+---
+
+## 🛠 TROUBLESHOOTING (Build Issues)
+If you encounter errors during installation (like `spawn.h` missing or `numpy` failing to build):
+1. Ensure you have the latest packages: `pkg update && pkg upgrade`
+2. Install build helpers: `pkg install libandroid-spawn pkg-config`
+3. Retry the installer: `./scripts/install.sh`
+
+---
+
 *Build Nexus Omni. Visualize the Mind. Secure the Future. Own Your Data.*
