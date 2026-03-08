@@ -58,7 +58,7 @@
   },
   "voice": {
     "wake_word": "hey nexus",
-    "stt_model": "vosk-model",
+    "whisper_model": "tiny",
     "tts_engine": "termux",
     "offline_only": true
   },

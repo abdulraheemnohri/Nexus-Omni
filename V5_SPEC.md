@@ -28,7 +28,7 @@ This document serves as the **complete source of truth** for building **Nexus Om
 *   **OS:** Android (via **Termux** from F-Droid).
 *   **Language:** Python 3.10+.
 *   **Core Libraries:**
-    *   `vosk` (Offline Speech-to-Text)
+    *   `openai-whisper` (Offline Speech-to-Text)
     *   `llama-cpp-python` (Offline LLM Inference)
     *   `sqlite-vec` (Semantic Vector Memory)
     *   `tensorflow-lite-runtime` (Offline Vision)
@@ -101,7 +101,7 @@ This document serves as the **complete source of truth** for building **Nexus Om
 *   **Tech:** Server-side rendering (Jinja2) + HTMX for dynamic updates without page reloads.
 
 ### 4.3 Voice Interface (`modules/voice.py`)
-*   **STT:** Vosk Model (Offline).
+*   **STT:** OpenAI Whisper (Offline).
 *   **TTS:** `termux-tts-speak` OR `coqui-tts` (for voice cloning).
 *   **Wake Word:** "Hey Nexus".
 *   **Privacy:** Audio processed in RAM.
@@ -283,7 +283,7 @@ pkg update && pkg upgrade
 pkg install python python-pip clang cmake ffmpeg wget ghostscript tesseract openssl git nodejs
 
 # 4. Install Python Libraries
-pip install vosk llama-cpp-python flask flask-socketio apscheduler cryptography pandas numpy sqlite-vec paho-mqtt pillow networkx pyvis coqui-tts
+pip install openai-whisper llama-cpp-python flask flask-socketio apscheduler cryptography pandas numpy sqlite-vec paho-mqtt pillow networkx pyvis coqui-tts
 
 # 5. Install Termux API
 pkg install termux-api

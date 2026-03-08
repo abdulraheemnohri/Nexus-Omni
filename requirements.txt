@@ -1,4 +1,4 @@
-vosk>=0.3.45
+openai-whisper
 llama-cpp-python>=0.2.50
 flask>=3.0.0
 flask-socketio>=5.3.0

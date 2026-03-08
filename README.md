@@ -171,14 +171,9 @@ pip install -r requirements.txt
 
 ## 5. AI MODEL DOWNLOADS
 
-### Step 5.1: Download Vosk Speech Model (40MB)
-```bash
-cd ~/nexus_omni/models
-wget https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
-unzip vosk-model-small-en-us-0.15.zip
-mv vosk-model-small-en-us-0.15 vosk-model
-rm vosk-model-small-en-us-0.15.zip
-```
+### Step 5.1: Whisper Speech Model
+Whisper models are downloaded automatically on first run. Default is `tiny`.
+To change, edit `config.json` -> `voice` -> `whisper_model`.
 
 ### Step 5.2: Download Local LLM Model (1GB)
 ```bash

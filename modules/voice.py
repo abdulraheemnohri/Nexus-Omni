@@ -6,7 +6,8 @@ Voice Interface Module - Offline STT/TTS
 import os
 import json
 import subprocess
-from vosk import Model, KaldiRecognizer
+import whisper
+import numpy as np
 try:
     import pyaudio
 except ImportError:
@@ -15,18 +16,18 @@ except ImportError:
 class VoiceInterface:
     def __init__(self, config):
         self.config = config
-        self.model_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'vosk-model')
+        self.model_name = config['voice'].get('whisper_model', 'tiny')
         self.sample_rate = 16000
         self.wake_word = config['voice']['wake_word'].lower()
 
-        # Initialize Vosk model
-        if not os.path.exists(self.model_path):
-            print(f"Warning: Vosk model not found at {self.model_path}. Voice input disabled.")
+        # Initialize Whisper model
+        try:
+            print(f"[*] Loading Whisper model: {self.model_name}...")
+            self.model = whisper.load_model(self.model_name)
+            print("✓ Whisper STT initialized.")
+        except Exception as e:
+            print(f"Warning: Failed to load Whisper model: {e}. Voice input disabled.")
             self.model = None
-            return
-
-        self.model = Model(self.model_path)
-        self.recognizer = KaldiRecognizer(self.model, self.sample_rate)
 
         # Initialize audio
         if pyaudio:
@@ -46,7 +47,7 @@ class VoiceInterface:
             print(f"TTS Error: {e}")
 
     def listen(self, timeout=5):
-        """Listen for voice command and return recognized text"""
+        """Listen for voice command and return recognized text using Whisper"""
         if not self.p or not self.model:
             return None
 
@@ -66,14 +67,15 @@ class VoiceInterface:
             if len(data) == 0:
                 return None
 
-            if self.recognizer.AcceptWaveform(data):
-                result = json.loads(self.recognizer.Result())
+            # Convert to float32 numpy array for Whisper
+            audio_np = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768.0
+
+            # Simple threshold for speech detection (stub)
+            if np.abs(audio_np).max() > 0.05:
+                result = self.model.transcribe(audio_np, fp16=False)
                 text = result.get("text", "").strip()
                 if text:
                     return text
-            else:
-                # Partial result
-                pass
 
             return None
 
