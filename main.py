@@ -18,7 +18,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'modules'))
 
 # Import core modules
-from dashboard import run_dashboard, SocketIOHandler
+from dashboard import run_dashboard, SocketIOHandler, broadcast_telemetry
 from voice import VoiceInterface
 from memory import BrainMemory
 from control import ADBController
@@ -120,6 +120,18 @@ class NexusOmni:
             self.logger.warning("Low battery - switching to power save mode")
         return True
 
+    def telemetry_loop(self):
+        while self.running:
+            try:
+                stats = self.sensors.get_system_stats()
+                battery = self.sensors.get_battery()
+                stats['battery'] = battery.get('percentage', 100)
+                stats['battery_status'] = battery.get('status', 'unknown')
+                broadcast_telemetry(stats)
+            except:
+                pass
+            time.sleep(5)
+
     def energy_management_loop(self):
         while self.running:
             battery = self.sensors.get_battery()
@@ -149,6 +161,7 @@ class NexusOmni:
 
         # Start background threads
         threading.Thread(target=self.energy_management_loop, daemon=True).start()
+        threading.Thread(target=self.telemetry_loop, daemon=True).start()
 
         # Start dashboard
         dashboard_thread = threading.Thread(target=run_dashboard, args=(self.config,), daemon=True)

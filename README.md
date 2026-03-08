@@ -217,7 +217,7 @@ Navigate to `https://127.0.0.1:5000` in your browser.
 ---
 
 ## 🛠 Features (v5.0 Horizon)
-- **Full-Stack Dashboard:** Real-time monitoring with SocketIO and interactive HTMX controls.
+- **Full-Stack Dashboard:** Real-time telemetry (CPU, RAM, Battery, Storage) with SocketIO and interactive HTMX controls.
 - **Interactive Console:** Execute ADB commands and view live system logs.
 - **Multi-Profile Support:** Seamlessly switch between Personal, Work, and Incognito modes.
 - **Agentic Planning:** Goal decomposition using local LLM (llama-cpp).
