@@ -15,7 +15,7 @@ pkg update && pkg upgrade -y
 
 # 2. Install System Dependencies
 echo "[2/6] Installing system dependencies..."
-pkg install -y python python-pip clang cmake wget git curl openssl nano nodejs termux-api ffmpeg tesseract ghostscript
+pkg install -y python python-pip clang cmake wget git curl openssl nano nodejs termux-api ffmpeg tesseract ghostscript proot proot-distro libjpeg-turbo libpng
 
 # 3. Setup Python Environment
 echo "[3/6] Installing Python libraries..."

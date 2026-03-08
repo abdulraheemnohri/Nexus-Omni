@@ -5,15 +5,20 @@ import datetime
 import functools
 import bcrypt
 import os
+import logging
 from modules.utils import get_logger, load_config
 
 logger = get_logger("Dashboard")
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
-app.config['SECRET_KEY'] = os.urandom(24)
+config = load_config()
+app.config['SECRET_KEY'] = config['dashboard'].get('secret_key', os.urandom(24))
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-config = load_config()
+class SocketIOHandler(logging.Handler):
+    def emit(self, record):
+        log_entry = self.format(record)
+        socketio.emit('log_stream', {'data': log_entry})
 
 def token_required(f):
     @functools.wraps(f)
@@ -44,7 +49,7 @@ def login():
         token = jwt.encode({
             'user': 'admin',
             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=config['dashboard']['session_timeout_minutes'])
-        }, app.config['SECRET_KEY'])
+        }, app.config['SECRET_KEY'], algorithm="HS256")
         session['token'] = token
         return jsonify({'status': 'success'})
     else:
@@ -67,6 +72,7 @@ def manage_config():
     if request.method == 'POST':
         new_config = request.json
         with open('config.json', 'w') as f:
+            import json
             json.dump(new_config, f, indent=2)
         config = new_config
         return jsonify({'status': 'updated'})
@@ -76,7 +82,6 @@ def manage_config():
 @token_required
 def run_adb():
     command = request.json.get('command', '').split()
-    # In a real app, you'd pass this to the ControlBridge
     logger.info(f"Dashboard triggered ADB: {command}")
     return jsonify({'status': 'sent', 'command': command})
 
@@ -107,6 +112,13 @@ def trigger_kill():
     logger.critical("KILL SWITCH TRIGGERED FROM DASHBOARD")
     return jsonify({'status': 'terminating'})
 
+@app.route('/api/plugins', methods=['GET'])
+@token_required
+def list_plugins():
+    plugins_dir = os.path.join(os.path.dirname(__file__), '..', 'plugins')
+    files = [f for f in os.listdir(plugins_dir) if f.endswith('.py') and f != '__init__.py']
+    return jsonify({'plugins': files})
+
 @socketio.on('connect')
 def connect():
     logger.info("Client connected to WebSocket.")
@@ -115,10 +127,14 @@ def connect():
 def stream_logs(log_line):
     socketio.emit('log_stream', {'data': log_line})
 
-def run_dashboard():
-    port = config['dashboard']['port']
-    host = config['dashboard']['host']
-    ssl_enabled = config['dashboard']['ssl_enabled']
+def broadcast_telemetry(stats):
+    socketio.emit('telemetry', stats)
+
+def run_dashboard(config_arg):
+    # This matches the signature expected by main.py
+    port = config_arg['dashboard']['port']
+    host = config_arg['dashboard']['host']
+    ssl_enabled = config_arg['dashboard']['ssl_enabled']
 
     if ssl_enabled:
         context = ('cert.pem', 'key.pem')

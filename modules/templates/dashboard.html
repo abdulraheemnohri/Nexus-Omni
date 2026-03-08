@@ -21,27 +21,63 @@
             <a href="#" @click="page = 'vision'" class="block py-2.5 px-4 rounded transition duration-200" :class="page === 'vision' ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'">Vision</a>
             <a href="#" @click="page = 'automation'" class="block py-2.5 px-4 rounded transition duration-200" :class="page === 'automation' ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'">Automation</a>
             <a href="#" @click="page = 'settings'" class="block py-2.5 px-4 rounded transition duration-200" :class="page === 'settings' ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'">Settings</a>
+            <a href="#" @click="page = 'plugins'" hx-get="/api/plugins" hx-target="#plugin-list" class="block py-2.5 px-4 rounded transition duration-200" :class="page === 'plugins' ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'">Plugins</a>
             <a href="/graph" target="_blank" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Knowledge Graph</a>
         </nav>
         <a href="/logout" class="mt-auto py-2.5 px-4 rounded bg-red-600 hover:bg-red-700 text-center">Logout</a>
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 p-10">
+    <div class="flex-1 p-10 overflow-y-auto">
         <div x-show="page === 'home'">
             <h1 class="text-4xl font-bold mb-6">System Status</h1>
-            <div class="grid grid-cols-3 gap-6">
+            <div class="grid grid-cols-4 gap-6 mb-10">
                 <div class="bg-gray-800 p-6 rounded-lg">
                     <h3 class="text-gray-400 uppercase text-sm">Battery</h3>
-                    <p class="text-3xl font-bold">85%</p>
+                    <p class="text-3xl font-bold" id="stat-battery">--%</p>
+                    <div class="w-full bg-gray-700 h-2 mt-2 rounded-full">
+                        <div id="bar-battery" class="bg-green-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
                 </div>
                 <div class="bg-gray-800 p-6 rounded-lg">
                     <h3 class="text-gray-400 uppercase text-sm">CPU Load</h3>
-                    <p class="text-3xl font-bold">12%</p>
+                    <p class="text-3xl font-bold" id="stat-cpu">--%</p>
+                    <div class="w-full bg-gray-700 h-2 mt-2 rounded-full">
+                        <div id="bar-cpu" class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
                 </div>
                 <div class="bg-gray-800 p-6 rounded-lg">
-                    <h3 class="text-gray-400 uppercase text-sm">Status</h3>
-                    <p class="text-3xl font-bold text-green-500">Online</p>
+                    <h3 class="text-gray-400 uppercase text-sm">RAM Usage</h3>
+                    <p class="text-3xl font-bold" id="stat-ram">--%</p>
+                    <div class="w-full bg-gray-700 h-2 mt-2 rounded-full">
+                        <div id="bar-ram" class="bg-purple-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-gray-400 uppercase text-sm">Storage</h3>
+                    <p class="text-3xl font-bold" id="stat-storage">--%</p>
+                    <div class="w-full bg-gray-700 h-2 mt-2 rounded-full">
+                        <div id="bar-storage" class="bg-yellow-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-10">
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold mb-4">Quick Actions</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button class="bg-gray-700 p-4 rounded hover:bg-gray-600 transition" hx-post="/api/adb" hx-vals='{"command": "shell input keyevent 26"}' hx-ext="json-enc">Lock Device</button>
+                        <button class="bg-gray-700 p-4 rounded hover:bg-gray-600 transition" hx-post="/api/adb" hx-vals='{"command": "shell am start -a android.media.action.STILL_IMAGE_CAMERA"}' hx-ext="json-enc">Open Camera</button>
+                        <button class="bg-gray-700 p-4 rounded hover:bg-gray-600 transition" @click="page = 'automation'">Schedules</button>
+                        <button class="bg-gray-700 p-4 rounded hover:bg-gray-600 transition" @click="page = 'plugins'" hx-get="/api/plugins" hx-target="#plugin-list">Plugins</button>
+                    </div>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold mb-4">Recent Events</h2>
+                    <div id="event-feed" class="space-y-2 text-sm text-gray-400 font-mono">
+                        <p>> Nexus Brain Online</p>
+                        <p>> Models initialized</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -79,6 +115,15 @@
             <div class="bg-gray-800 p-6 rounded-lg">
                 <button class="bg-green-600 px-4 py-2 rounded font-bold mb-4">+ Create Workflow</button>
                 <p class="text-gray-400">No active scheduled tasks.</p>
+            </div>
+        </div>
+
+        <div x-show="page === 'plugins'">
+            <h1 class="text-4xl font-bold mb-6">Plugin Manager</h1>
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <div id="plugin-list" class="divide-y divide-gray-700">
+                    <!-- Plugins will be loaded here -->
+                </div>
             </div>
         </div>
 
@@ -122,6 +167,25 @@
 
         socket.on('status', function(msg) {
             console.log(msg.data);
+        });
+
+        socket.on('telemetry', function(msg) {
+            if (msg.battery !== undefined) {
+                document.getElementById('stat-battery').textContent = msg.battery + '%';
+                document.getElementById('bar-battery').style.width = msg.battery + '%';
+            }
+            if (msg.cpu !== undefined) {
+                document.getElementById('stat-cpu').textContent = msg.cpu + '%';
+                document.getElementById('bar-cpu').style.width = msg.cpu + '%';
+            }
+            if (msg.ram !== undefined) {
+                document.getElementById('stat-ram').textContent = msg.ram + '%';
+                document.getElementById('bar-ram').style.width = msg.ram + '%';
+            }
+            if (msg.storage !== undefined) {
+                document.getElementById('stat-storage').textContent = msg.storage + '%';
+                document.getElementById('bar-storage').style.width = msg.storage + '%';
+            }
         });
     </script>
 </body>
