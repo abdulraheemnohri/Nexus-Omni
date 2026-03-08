@@ -26,6 +26,8 @@ from agent import AgentPlanner
 from sensors import SensorFusion
 from vault import SecureVault
 from autopilot import AutoPilot
+from modules.vision import VisionEngine
+from modules.graph import GraphManager
 from utils import load_config, generate_ssl_cert
 
 class NexusOmni:
@@ -118,9 +120,35 @@ class NexusOmni:
             self.logger.warning("Low battery - switching to power save mode")
         return True
 
+    def energy_management_loop(self):
+        while self.running:
+            battery = self.sensors.get_battery()
+            percent = battery.get('percentage', 100)
+            if percent < self.config['energy']['llm_mode_low']:
+                # Keyword only
+                pass
+            elif percent < self.config['energy']['llm_mode_medium']:
+                # Quantized
+                pass
+            time.sleep(60)
+
+    def process_command(self, text):
+        if self.incognito_mode:
+            self.logger.info("Processing in Incognito Mode (No persistence)")
+            return self.agent.process(text)
+
+        # Save to memory first
+        self.memory.save(text, category="user_input")
+        response = self.agent.process(text)
+        self.memory.save(response, category="ai_response")
+        return response
+
     def run(self):
         signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGTERM, self.signal_handler)
+
+        # Start background threads
+        threading.Thread(target=self.energy_management_loop, daemon=True).start()
 
         # Start dashboard
         dashboard_thread = threading.Thread(target=run_dashboard, args=(self.config,), daemon=True)

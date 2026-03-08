@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus Omni - Dashboard</title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -86,19 +87,22 @@
             <div class="bg-gray-800 p-6 rounded-lg space-y-4">
                 <div>
                     <label class="block mb-1">Active Profile</label>
-                    <select class="w-full p-2 rounded bg-gray-700 border border-gray-600">
-                        <option>personal</option>
-                        <option>work</option>
-                        <option>incognito</option>
+                    <select class="w-full p-2 rounded bg-gray-700 border border-gray-600" hx-post="/api/profile/switch" hx-trigger="change" hx-ext="json-enc">
+                        <option value="personal">personal</option>
+                        <option value="work">work</option>
+                        <option value="incognito">incognito</option>
                     </select>
                 </div>
                 <div class="flex items-center justify-between">
                     <span>Incognito Mode</span>
-                    <button class="bg-gray-600 w-12 h-6 rounded-full relative">
+                    <button class="bg-gray-600 w-12 h-6 rounded-full relative" hx-post="/api/incognito" hx-trigger="click" hx-ext="json-enc">
                         <div class="bg-white w-4 h-4 rounded-full absolute left-1 top-1"></div>
                     </button>
                 </div>
-                <button class="w-full bg-red-600 py-2 rounded font-bold" @click="confirm('Trigger Emergency Kill Switch?')">EMERGENCY KILL SWITCH</button>
+                <button class="w-full bg-red-600 py-2 rounded font-bold"
+                        hx-post="/api/kill"
+                        hx-confirm="Trigger Emergency Kill Switch?"
+                        hx-target="body">EMERGENCY KILL SWITCH</button>
             </div>
         </div>
     </div>

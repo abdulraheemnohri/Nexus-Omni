@@ -87,6 +87,26 @@ def search_memory():
     logger.info(f"Memory search: {query}")
     return jsonify({'results': []})
 
+@app.route('/api/profile/switch', methods=['POST'])
+@token_required
+def switch_profile():
+    profile = request.json.get('profile')
+    logger.info(f"Dashboard requested profile switch: {profile}")
+    return jsonify({'status': 'requested', 'profile': profile})
+
+@app.route('/api/incognito', methods=['POST'])
+@token_required
+def toggle_incognito():
+    state = request.json.get('state')
+    logger.info(f"Dashboard toggled incognito: {state}")
+    return jsonify({'status': 'updated', 'state': state})
+
+@app.route('/api/kill', methods=['POST'])
+@token_required
+def trigger_kill():
+    logger.critical("KILL SWITCH TRIGGERED FROM DASHBOARD")
+    return jsonify({'status': 'terminating'})
+
 @socketio.on('connect')
 def connect():
     logger.info("Client connected to WebSocket.")
