@@ -18,7 +18,10 @@ class AIEngine:
     def process(self, text):
         """Main processing - uses LLM if available, else rules"""
         text_lower = text.lower().strip()
-        self.db.save_chat('user', text)
+        try:
+            self.db.save_chat('user', text)
+        except Exception as e:
+            print(f"DB Error: {e}")
 
         # 1. Check for specific tool commands first
         response = self.rule_based_check(text_lower)
