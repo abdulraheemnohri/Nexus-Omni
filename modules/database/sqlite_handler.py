@@ -195,3 +195,35 @@ class DatabaseManager:
         row = conn.execute('SELECT value FROM settings WHERE user_id = ? AND key = ?', (user_id, key)).fetchone()
         conn.close()
         return row['value'] if row else default
+
+    def export_csv(self, user_id, table):
+        """Export table to CSV string"""
+        import csv
+        import io
+        conn = self.get_connection()
+        data = conn.execute(f'SELECT * FROM {table} WHERE user_id = ?', (user_id,)).fetchall()
+        conn.close()
+
+        output = io.StringIO()
+        if data:
+            writer = csv.DictWriter(output, fieldnames=data[0].keys())
+            writer.writeheader()
+            writer.writerows([dict(row) for row in data])
+        return output.getvalue()
+
+    def export_markdown(self, user_id, table):
+        """Export table to Markdown string"""
+        conn = self.get_connection()
+        data = conn.execute(f'SELECT * FROM {table} WHERE user_id = ?', (user_id,)).fetchall()
+        conn.close()
+
+        if not data: return "No data."
+
+        cols = data[0].keys()
+        header = "| " + " | ".join(cols) + " |"
+        sep = "| " + " | ".join(["---"] * len(cols)) + " |"
+        rows = []
+        for row in data:
+            rows.append("| " + " | ".join(str(val) for val in row) + " |")
+
+        return "\n".join([header, sep] + rows)

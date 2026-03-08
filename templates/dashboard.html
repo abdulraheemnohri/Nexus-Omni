@@ -53,6 +53,7 @@
             <button @click="tab = 'automation'" :class="tab === 'automation' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-400'" class="px-4 py-2 border-b-2 font-medium transition whitespace-nowrap">Automation</button>
             <button @click="tab = 'plugins'" :class="tab === 'plugins' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-400'" class="px-4 py-2 border-b-2 font-medium transition whitespace-nowrap">Plugins</button>
             <button @click="tab = 'tools'" :class="tab === 'tools' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-400'" class="px-4 py-2 border-b-2 font-medium transition whitespace-nowrap">Tools</button>
+            <button @click="tab = 'settings'" :class="tab === 'settings' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-400'" class="px-4 py-2 border-b-2 font-medium transition whitespace-nowrap">Settings</button>
         </div>
 
         <!-- Chat Tab -->
@@ -145,6 +146,36 @@
                         <p class="text-sm text-gray-300 line-clamp-3" x-text="note.content"></p>
                     </div>
                 </template>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div x-show="tab === 'settings'" x-cloak>
+            <div class="bg-gray-800 p-6 rounded-lg shadow-xl">
+                <h3 class="text-xl font-bold mb-6">System Settings</h3>
+                <div class="space-y-6">
+                    <div class="flex justify-between items-center p-3 bg-gray-700 rounded">
+                        <div>
+                            <h4 class="font-bold">Voice Interface</h4>
+                            <p class="text-xs text-gray-400">Enable offline STT/TTS</p>
+                        </div>
+                        <input type="checkbox" checked class="w-6 h-6">
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-700 rounded">
+                        <div>
+                            <h4 class="font-bold">Energy Mode</h4>
+                            <p class="text-xs text-gray-400">Reduce LLM precision on low battery</p>
+                        </div>
+                        <input type="checkbox" checked class="w-6 h-6">
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-700 rounded">
+                        <div>
+                            <h4 class="font-bold">Mesh Networking</h4>
+                            <p class="text-xs text-gray-400">Offline P2P communication</p>
+                        </div>
+                        <input type="checkbox" class="w-6 h-6">
+                    </div>
+                </div>
             </div>
         </div>
 
