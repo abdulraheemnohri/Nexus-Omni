@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "Nexus Omni",
-    "version": "4.0",
+    "version": "5.0",
     "debug": false,
     "host": "0.0.0.0",
     "port": 5000
