@@ -48,3 +48,10 @@ class Security:
         if not self.encryption_enabled or not self.cipher:
             return data
         return self.cipher.decrypt(data.encode()).decode()
+
+    def generate_token(self):
+        import secrets
+        return secrets.token_hex(32)
+
+    def log_failed_attempt(self, db, ip):
+        db.log_security_event("LOGIN_FAIL", f"Failed attempt from IP: {ip}")

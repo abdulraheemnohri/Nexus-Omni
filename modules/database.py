@@ -92,6 +92,17 @@ class Database:
             )
         ''')
 
+        # Reminders table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS reminders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
+                remind_at TEXT,
+                is_active INTEGER DEFAULT 1,
+                created_at TEXT
+            )
+        ''')
+
         conn.commit()
         conn.close()
 
@@ -105,7 +116,60 @@ class Database:
         )
         conn.commit()
         conn.close()
-        return cursor.lastrowid
+
+    def add_note(self, title, content, tags=''):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        now = datetime.datetime.now().isoformat()
+        cursor.execute(
+            'INSERT INTO notes (title, content, tags, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
+            (title, content, tags, now, now)
+        )
+        conn.commit()
+        conn.close()
+
+    def get_notes(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM notes ORDER BY updated_at DESC')
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+
+    def add_reminder(self, title, remind_at):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            'INSERT INTO reminders (title, remind_at, created_at) VALUES (?, ?, ?)',
+            (title, remind_at, datetime.datetime.now().isoformat())
+        )
+        conn.commit()
+        conn.close()
+
+    def get_reminders(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM reminders WHERE is_active = 1 ORDER BY remind_at ASC')
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+
+    def log_security_event(self, event_type, details):
+        self.save_memory(f"{event_type}: {details}", category='security')
+
+    def export_all_data(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        export = {}
+        tables = ['memory', 'todos', 'notes', 'chat_history', 'settings']
+        for table in tables:
+            try:
+                cursor.execute(f'SELECT * FROM {table}')
+                export[table] = [dict(row) for row in cursor.fetchall()]
+            except:
+                export[table] = []
+        conn.close()
+        return export
 
     def get_memories(self, limit=50, category=None):
         """Retrieve memories"""

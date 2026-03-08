@@ -28,7 +28,8 @@
   "database": {
     "path": "data/nexus.db",
     "backup_enabled": true,
-    "backup_interval_hours": 24
+    "backup_interval_hours": 24,
+    "backup_location": "data/backups"
   },
   "logging": {
     "level": "INFO",
