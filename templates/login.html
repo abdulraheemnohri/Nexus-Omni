@@ -4,28 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus Omni - Login</title>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-900 text-white flex items-center justify-center h-screen">
     <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-96">
-        <h1 class="text-3xl font-bold mb-6 text-center text-blue-500">Nexus Omni v5.0</h1>
-        <form hx-post="/login" hx-target="#response" hx-swap="innerHTML" hx-on="htmx:afterRequest: handleLogin(event)">
+        <h1 class="text-3xl font-bold mb-6 text-center text-blue-500">Nexus Omni v4.0</h1>
+        <form action="/login" method="POST">
             <div class="mb-4">
                 <label class="block mb-2">Security PIN</label>
-                <input type="password" name="pin" class="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500" required>
+                <input type="password" name="pin" class="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500" required autofocus>
             </div>
             <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold transition">Authorize</button>
         </form>
-        <div id="response" class="mt-4 text-center text-red-500"></div>
     </div>
-
-    <script>
-        function handleLogin(event) {
-            if (event.detail.xhr.status === 200) {
-                window.location.reload();
-            }
-        }
-    </script>
 </body>
 </html>

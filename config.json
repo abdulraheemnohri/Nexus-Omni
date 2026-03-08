@@ -1,87 +1,38 @@
 {
-  "identity": {
-    "name": "Nexus",
-    "version": "5.0",
-    "voice_profile": "default",
-    "voice_speed": 150,
-    "voice_pitch": 1.0
+  "app": {
+    "name": "Nexus Omni",
+    "version": "4.0",
+    "debug": false,
+    "host": "0.0.0.0",
+    "port": 5000
   },
-  "dashboard": {
-    "port": 5000,
-    "host": "127.0.0.1",
-    "ssl_enabled": true,
-    "lan_access": false,
-    "lan_allowed_ips": ["192.168.1.0/24"],
-    "session_timeout_minutes": 15,
-    "max_login_attempts": 5,
-    "secret_key": "nexus_omni_sovereign_key_v5"
+  "ai": {
+    "model_path": "models/tinyllama.gguf",
+    "context_size": 2048,
+    "max_tokens": 256,
+    "temperature": 0.7,
+    "threads": 4
+  },
+  "voice": {
+    "enabled": true,
+    "language": "en-US",
+    "rate": 1.0,
+    "pitch": 1.0
   },
   "security": {
     "pin_enabled": true,
-    "pin_hash": "$2b$12$ZwxSfrCJV5OHFeL.iigkpe0n.zpHNGRvABMPuSETeujNhTQB7nhHC",
-    "biometric_required_for": ["sms", "call", "delete", "payment", "backup"],
-    "kill_switch_enabled": true,
-    "kill_switch_combo": "volume_up+volume_down",
-    "max_failed_attempts": 3,
-    "lockout_duration_minutes": 15,
-    "intruder_photo_enabled": true
+    "pin_length": 4,
+    "encryption_enabled": true,
+    "session_timeout": 900
   },
-  "memory": {
-    "encrypt_vault": true,
-    "semantic_enabled": true,
-    "knowledge_graph_enabled": true,
-    "max_history_days": 90,
-    "auto_backup_days": 7,
-    "backup_location": "backups/"
-  },
-  "profiles": {
-    "active": "personal",
-    "available": ["personal", "work", "incognito"],
-    "incognito_logging": false
-  },
-  "energy": {
-    "llm_mode_high": 80,
-    "llm_mode_medium": 40,
-    "llm_mode_low": 15,
-    "auto_sleep_mode": true,
-    "night_mode_start": "22:00",
-    "night_mode_end": "06:00"
-  },
-  "network": {
-    "mqtt_enabled": true,
-    "mqtt_port": 1883,
-    "mesh_enabled": true,
-    "mesh_port": 5005,
-    "adb_ip": "192.168.1.5:33521",
-    "adb_auto_reconnect": true,
-    "adb_reconnect_interval_seconds": 300
-  },
-  "voice": {
-    "wake_word": "hey nexus",
-    "stt_model": "vosk-model",
-    "tts_engine": "termux",
-    "offline_only": true
-  },
-  "vision": {
-    "enabled": true,
-    "ocr_enabled": true,
-    "object_detection_enabled": true,
-    "auto_capture_enabled": false
-  },
-  "automation": {
-    "enabled": true,
-    "scheduler_enabled": true,
-    "workflow_directory": "plugins/automation/"
-  },
-  "legacy": {
-    "inactivity_limit_days": 90,
-    "beneficiary_public_key": "",
-    "will_encrypted": true
+  "database": {
+    "path": "data/nexus.db",
+    "backup_enabled": true,
+    "backup_interval_hours": 24
   },
   "logging": {
     "level": "INFO",
     "file": "logs/nexus.log",
-    "max_size_mb": 50,
-    "backup_count": 5
+    "max_size_mb": 50
   }
 }
