@@ -1,45 +1,46 @@
 #!/bin/bash
 
-# Nexus Omni v5.0 "Horizon" - Automated Installation Script
-# Designed for Termux (Android)
+# Nexus Omni v5.0 "Horizon" - Internal Setup Script
+# Handles deep system dependencies and project initialization
 
 set -e
 
-echo "===================================================="
-echo "   NEXUS OMNI v5.0 - INSTALLATION STARTED"
-echo "===================================================="
+echo "----------------------------------------------------"
+echo "   NEXUS OMNI - INTERNAL MODULE SETUP"
+echo "----------------------------------------------------"
 
-# 1. Update Packages
-echo "[1/6] Updating Termux packages..."
-pkg update && pkg upgrade -y
+# 1. System Packages
+echo "[1/5] Installing core system packages..."
+pkg install -y python python-pip clang cmake wget curl nano nodejs termux-api ffmpeg tesseract ghostscript proot proot-distro libjpeg-turbo libpng
 
-# 2. Install System Dependencies
-echo "[2/6] Installing system dependencies..."
-pkg install -y python python-pip clang cmake wget git curl openssl nano nodejs termux-api ffmpeg tesseract ghostscript proot proot-distro libjpeg-turbo libpng
-
-# 3. Setup Python Environment
-echo "[3/6] Installing Python libraries..."
+# 2. Python Environment
+echo "[2/5] Setting up Python dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 4. Create Project Structure
-echo "[4/6] Initializing project structure..."
+# 3. Project Directories
+echo "[3/5] Initializing data folders..."
 mkdir -p models data logs modules/templates modules/static backups plugins/automation scripts
 
-# 5. Download Models (Placeholder for User Choice)
-echo "[5/6] Model directories prepared. Please download models manually or via dashboard."
-# mkdir -p models/vosk-model
-
-# 6. Generate SSL Certificate
-echo "[6/6] Generating self-signed SSL certificate..."
+# 4. SSL Generation
+echo "[4/5] Generating dashboard security certificates..."
 if [ ! -f "key.pem" ]; then
     openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/C=US/ST=Local/L=Local/O=Nexus/CN=localhost"
     chmod 600 key.pem
     chmod 644 cert.pem
+    echo "✓ Certificates generated."
+else
+    echo "✓ Certificates already exist."
 fi
 
-echo "===================================================="
-echo "   INSTALLATION COMPLETE!"
-echo "===================================================="
-echo "Run 'python main.py' to start the brain."
-echo "===================================================="
+# 5. API Permissions
+echo "[5/5] Checking Termux API..."
+if command -v termux-battery-status >/dev/null; then
+    echo "✓ Termux API is accessible."
+else
+    echo "! Warning: Termux:API app must be installed from F-Droid for full functionality."
+fi
+
+echo "----------------------------------------------------"
+echo "   SYSTEM MODULES READY"
+echo "----------------------------------------------------"

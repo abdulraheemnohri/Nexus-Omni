@@ -140,21 +140,23 @@ termux-setup-storage
 
 ---
 
+## 🚀 FAST INSTALL (One-Liner)
+Run this command in Termux to install Nexus Omni v5.0 automatically:
+```bash
+pkg install -y wget && wget https://raw.githubusercontent.com/abdulraheemnohri/Nexus-Omni/main/nexus-installer.sh && chmod +x nexus-installer.sh && ./nexus-installer.sh
+```
+
+---
+
 ## 4. PROJECT SETUP (GITHUB CLONE)
 
-### Step 4.1: Automated Installation (Recommended)
-Clone the repository and run the setup script to automate everything:
+### Step 4.1: Automated Installation
+If you have already cloned the repository:
 ```bash
-# 1. Navigate to home directory
-cd ~
-
-# 2. Clone the repository
-git clone https://github.com/abdulraheemnohri/Nexus-Omni.git
-
-# 3. Navigate to project directory
+# Navigate to project directory
 cd Nexus-Omni
 
-# 4. Run automated setup
+# Run automated setup
 chmod +x setup.sh
 ./setup.sh
 ```
