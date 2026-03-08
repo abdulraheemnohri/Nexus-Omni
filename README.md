@@ -142,8 +142,8 @@ termux-setup-storage
 
 ## 4. PROJECT SETUP (GITHUB CLONE)
 
-### Step 4.1: Clone & Install Dependencies
-Clone this repository directly into Termux and install the Python libraries:
+### Step 4.1: Automated Installation (Recommended)
+Clone the repository and run the setup script to automate everything:
 ```bash
 # 1. Navigate to home directory
 cd ~
@@ -154,7 +154,14 @@ git clone https://github.com/abdulraheemnohri/Nexus-Omni.git
 # 3. Navigate to project directory
 cd Nexus-Omni
 
-# 4. Install all dependencies
+# 4. Run automated setup
+chmod +x setup.sh
+./setup.sh
+```
+
+### Step 4.2: Manual Installation (Alternative)
+If you prefer to install dependencies manually:
+```bash
 pip install -r requirements.txt
 ```
 
@@ -206,6 +213,18 @@ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -node
 python3 main.py
 ```
 Navigate to `https://127.0.0.1:5000` in your browser.
+
+---
+
+## 🛠 Features (v5.0 Horizon)
+- **Full-Stack Dashboard:** Real-time monitoring with SocketIO and interactive HTMX controls.
+- **Interactive Console:** Execute ADB commands and view live system logs.
+- **Multi-Profile Support:** Seamlessly switch between Personal, Work, and Incognito modes.
+- **Agentic Planning:** Goal decomposition using local LLM (llama-cpp).
+- **Semantic Memory:** Long-term factual recall with vector embeddings (sqlite-vec).
+- **Knowledge Graph:** Visual relationship mapping between entities.
+- **Energy Aware:** Automatic precision adjustment based on battery status.
+- **Kill Switch:** Immediate emergency lockdown via dashboard or hardware keys.
 
 ---
 
